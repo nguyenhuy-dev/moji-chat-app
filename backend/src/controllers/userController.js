@@ -4,8 +4,12 @@ export const authMe = async (req, res) => {
 
     return res.status(200).json({ user });
   } catch (error) {
-    console.error("Error appears when getting info of user");
+    console.error("Error appears when getting info of user", error);
 
-    return res.status(500).json({ message: "Error system" });
+    return res.status(500).json({ message: "Lỗi hệ thống" });
   }
+};
+
+export const test = async (req, res) => {
+  return res.sendStatus(204);
 };
