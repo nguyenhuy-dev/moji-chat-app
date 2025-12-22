@@ -1,0 +1,91 @@
+{
+  "openapi": "3.0.0",
+  "infor": {
+    "title": "Moji",
+    "version": "1.0.0",
+    "description": ""
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5001/api"
+    }
+  ],
+  "paths": {
+    "/auth/signin": {
+      "post": {
+        "summary": "SignIn",
+        "description": "Log in với username và password. Trả về access token trong res và refresh token trong cookies",
+        "tags": ["Authentication"],
+        "responses": {
+          "200": {
+            "description": "User successfully signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User Nguyen Mai đã logged in!"
+                    },
+                    "accessToken": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTNlY2Y2Y2JkYjZmOWIwMDA1NGJlNzEiLCJpYXQiOjE3NjY0MTMzOTcsImV4cCI6MTc2NjQxNjk5N30.83uenaqoAgwPmIEIQW-G0PZV9x8JfXnMFCYq3h1vHsg"
+                    }
+                  },
+                  "required": ["message", "accessToken"]
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid input" },
+          "401": { "description": "Unauthoried" },
+          "500": { "description": "Internal server error" }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "color"
+                  }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/signout": {
+      "post": {
+        "summary": "SignOut",
+        "tags": ["Authentication"],
+        "responses": {
+          "200": { "description": "Success" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}

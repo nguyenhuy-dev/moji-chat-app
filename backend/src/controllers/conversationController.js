@@ -27,6 +27,11 @@ export const createConversation = async (req, res) => {
         "participants.userId": { $all: [userId, participantId] },
       });
 
+      if (conversation)
+        return res
+          .status(400)
+          .json({ message: "Cuộc trò chuyện giữa 2 người đã tồn tại" });
+
       if (!conversation) {
         conversation = new Conversation({
           type: "direct",
@@ -39,6 +44,10 @@ export const createConversation = async (req, res) => {
     }
 
     if (type === "group") {
+      if (memberIds.length < 2)
+        return res
+          .status(400)
+          .json({ message: "Nhóm chat phải bao gồm ít nhất 3 thành viên" });
       conversation = new Conversation({
         type: "group",
         participants: [{ userId }, ...memberIds.map((id) => ({ userId: id }))],
@@ -73,6 +82,70 @@ export const createConversation = async (req, res) => {
   }
 };
 
-export const getConversations = async (req, res) => {};
+export const getConversations = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const conversations = await Conversation.find({
+      "participants.userId": userId,
+    })
+      .sort({ lastMessageAt: -1, updatedAt: -1 })
+      .populate({
+        path: "participants.userId",
+        select: "displayName avatarUrl",
+      })
+      .populate({
+        path: "lastMessage.senderId",
+        select: "displayName avatarUrl",
+      })
+      .populate({ path: "seenBy.userId", select: "displayName avatarUrl" });
 
-export const getMessages = async (req, res) => {};
+    const formatted = conversations.map((conv) => {
+      const participants = (conv.participants || []).map((p) => ({
+        _id: p.userId?._id,
+        displayName: p.userId?.displayName,
+        avatarUrl: p.userId?.avatarUrl ?? null,
+        joinedAt: p.joinedAt,
+      }));
+
+      return {
+        ...conv.toObject(),
+        unreadCounts: conv.unreadCounts || {},
+        participants,
+      };
+    });
+
+    return res.status(200).json({ conversations: formatted });
+  } catch (error) {
+    console.error("Lỗi xảy ra khi lấy conversations", error);
+    return res.status(500).json({ message: "Lỗi hệ thống" });
+  }
+};
+
+export const getMessages = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { limit = 50, cursor } = req.query;
+    const query = { conversationId };
+
+    if (cursor) query.createdAt = { $lte: new Date(cursor) };
+
+    let messages = await Message.find(query)
+      .sort({ createdAt: -1 })
+      .limit(Number(limit) + 1);
+
+    let nextCursor = null;
+
+    if (messages.length > Number(limit)) {
+      const nextMessage = messages[messages.length - 1];
+      nextCursor = nextMessage.createdAt.toISOString();
+      messages.pop(); // bỏ tin cuối cùng
+    }
+
+    messages = messages.reverse();
+
+    return res.status(200).json({ messages, nextCursor });
+  } catch (error) {
+    console.error("Lỗi xảy ra khi lấy messages", error);
+    return res.status(500).json({ message: "Lỗi hệ thống" });
+  }
+};
