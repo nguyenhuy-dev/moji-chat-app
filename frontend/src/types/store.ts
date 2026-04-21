@@ -1,5 +1,4 @@
-import type { Message } from "react-hook-form";
-import type { Conversation } from "./chat";
+import type { Conversation, Message } from "./chat";
 import type { User } from "./user";
 
 export interface AuthState {
@@ -45,10 +44,14 @@ export interface ChatState {
     }
   >;
   activeConversationId: string | null;
-  loading: boolean;
+  convoLoading: boolean;
+  messageLoading: boolean;
+
   reset: () => void;
 
   setActiveConversation: (id: string | null) => void;
 
   fetchConversations: () => Promise<void>;
+
+  fetchMessages: (conversationId?: string) => Promise<void>;
 }

@@ -4,6 +4,7 @@ import { authService } from "@/services/authService";
 import type { AuthState } from "@/types/store";
 import { persist } from "zustand/middleware";
 import { useChatStore } from "./useChatStore";
+import { AxiosError } from "axios";
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -106,10 +107,16 @@ export const useAuthStore = create<AuthState>()(
           set({ accessToken });
 
           if (!user) await fetchMe();
-        } catch (error) {
+        } catch (error: unknown) {
           console.error(error);
 
-          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+          if (
+            error instanceof AxiosError &&
+            (!error?.response?.data?.status ||
+              error?.response?.data?.status !== "NoToken")
+          ) {
+            toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+          }
 
           get().clearState();
         } finally {

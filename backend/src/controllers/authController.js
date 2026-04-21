@@ -25,6 +25,7 @@ export const signUp = async (req, res) => {
 
     // mã hóa password
     const hashedPassword = await bcrypt.hash(password, 10); // salt = 10
+    console.log(hashedPassword);
 
     // tạo user mới
     await User.create({
@@ -129,7 +130,7 @@ export const refreshToken = async (req, res) => {
     // lấy refresh token từ cookies
     const token = req.cookies?.refreshToken;
     if (!token)
-      return res.status(401).json({ message: "Token không tồn tại." });
+      return res.status(401).json({ message: "Token không tồn tại.", status: "NoToken" });
 
     // so sánh với refresh token trong database
     const session = await Session.findOne({ refreshToken: token });
@@ -186,7 +187,7 @@ export const refreshTokenWhenUnauthorized = async (req, res) => {
     // lấy refresh token từ cookies
     const token = req.cookies?.refreshToken;
     if (!token)
-      return res.status(401).json({ message: "Token không tồn tại." });
+      return res.status(401).json({ message: "Token không tồn tại.", status: "NoToken" });
 
     // so sánh với refresh token trong database
     const session = await Session.findOne({ refreshToken: token });
